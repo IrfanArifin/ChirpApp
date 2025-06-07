@@ -21,11 +21,17 @@ class AuthService {
     }
   }
 
-  static Future<Map<String, dynamic>> register(String email, String username, String password) async {
+  // Update di sini: menambahkan parameter fullname dan mengirimkannya ke backend
+  static Future<Map<String, dynamic>> register(String email, String username, String fullName, String password) async {
     final response = await http.post(
       Uri.parse('$apiUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'username': username, 'password': password}),
+      body: jsonEncode({
+        'email': email,
+        'username': username,
+        'fullName': fullName,
+        'password': password,
+      }),
     );
 
     final data = jsonDecode(response.body);

@@ -15,4 +15,21 @@ class TokenStorage {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
   }
+
+  // === FUNGSI BARU UNTUK USERID ===
+  
+  static Future<void> saveUserId(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', userId);
+  }
+
+  static Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('user_id');
+  }
+
+  static Future<void> clearUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+  }
 }
