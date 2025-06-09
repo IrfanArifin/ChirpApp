@@ -66,99 +66,142 @@ class _ProfileTabState extends State<ProfileTab> {
     }
   }
 
+  // Fungsi Logout: Bersihkan token & userId, lalu redirect ke LoginPage
+  Future<void> _logout() async {
+    await TokenStorage.clearToken();
+    await TokenStorage.clearUserId();
+
+    // Arahkan ke halaman login (sesuaikan route)
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/login');
+  }
+
+  void _onMenuSelected(String value) {
+    switch (value) {
+      case 'edit_profile':
+        // Navigasi ke halaman Edit Profile (buat halaman EditProfilePage)
+        Navigator.of(context).pushNamed('/edit_profile');
+        break;
+      case 'logout':
+        _logout();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<UserProfileResponse>(
-      future: futureProfile,
-      builder: (context, profileSnapshot) {
-        if (profileSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (profileSnapshot.hasError) {
-          return Center(child: Text('Error loading profile: ${profileSnapshot.error}'));
-        } else if (!profileSnapshot.hasData) {
-          return const Center(child: Text('No profile data found'));
-        } else {
-          final profile = profileSnapshot.data!;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: profile.user.image != null
-                      ? NetworkImage(profile.user.image!)
-                      : const AssetImage('assets/default_avatar.png') as ImageProvider,
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _onMenuSelected,
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem(
+                  value: 'edit_profile',
+                  child: Text('Edit Profile'),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  profile.user.username,
-                  style: Theme.of(context).textTheme.headlineLarge,
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Text('Logout'),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.user.fullName,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.user.bio ?? "Bio belum diisi",
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          profile.followerCount.toString(),
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                        const Text('Followers'),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text(
-                          profile.followingCount.toString(),
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                        const Text('Following'),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+              ];
+            },
+          ),
+        ],
+      ),
+      body: FutureBuilder<UserProfileResponse>(
+        future: futureProfile,
+        builder: (context, profileSnapshot) {
+          if (profileSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (profileSnapshot.hasError) {
+            return Center(child: Text('Error loading profile: ${profileSnapshot.error}'));
+          } else if (!profileSnapshot.hasData) {
+            return const Center(child: Text('No profile data found'));
+          } else {
+            final profile = profileSnapshot.data!;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: profile.user.image != null
+                        ? NetworkImage(profile.user.image!)
+                        : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    profile.user.username,
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    profile.user.fullName,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    profile.user.bio ?? "Bio belum diisi",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            profile.followerCount.toString(),
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          const Text('Followers'),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            profile.followingCount.toString(),
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          const Text('Following'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
 
-                // Bagian menampilkan postingan user
-                FutureBuilder<List<Chirp>>(
-                  future: futureUserPosts,
-                  builder: (context, postsSnapshot) {
-                    if (postsSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (postsSnapshot.hasError) {
-                      return Center(child: Text('Error loading posts: ${postsSnapshot.error}'));
-                    } else if (!postsSnapshot.hasData || postsSnapshot.data!.isEmpty) {
-                      return const Center(child: Text('No posts found.'));
-                    } else {
-                      final posts = postsSnapshot.data!;
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: posts.length,
-                        itemBuilder: (context, index) {
-                          return ChirpWidget(chirp: posts[index]);
-                        },
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        }
-      },
+                  // Bagian menampilkan postingan user
+                  FutureBuilder<List<Chirp>>(
+                    future: futureUserPosts,
+                    builder: (context, postsSnapshot) {
+                      if (postsSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (postsSnapshot.hasError) {
+                        return Center(child: Text('Error loading posts: ${postsSnapshot.error}'));
+                      } else if (!postsSnapshot.hasData || postsSnapshot.data!.isEmpty) {
+                        return const Center(child: Text('No posts found.'));
+                      } else {
+                        final posts = postsSnapshot.data!;
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: posts.length,
+                          itemBuilder: (context, index) {
+                            return ChirpWidget(chirp: posts[index]);
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }
