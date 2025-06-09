@@ -82,9 +82,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 80),
               Center(
                 child: Image.asset(
-                  'images/logo.jpg', // Ganti dengan path logo Anda
-                  width: 120,
-                  height: 120,
+                  'assets/images/logo.png',
+                  width: 200,
+                  height: 200,
                 ),
               ),
               const SizedBox(height: 80),
