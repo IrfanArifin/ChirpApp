@@ -124,12 +124,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
               icon: Icons.lock,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _register,
-              child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Daftar'),
+            InkWell(
+              onTap: _isLoading ? null : _register,
+              child: Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: _isLoading ? Colors.grey : Colors.black,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: _isLoading
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
             ),
+
           ],
         ),
       ),
