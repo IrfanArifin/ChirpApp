@@ -130,7 +130,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     radius: 50,
                     backgroundImage: profile.user.image != null
                         ? NetworkImage(profile.user.image!)
-                        : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                        : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                   ),
                   const SizedBox(height: 16),
                   Text(
