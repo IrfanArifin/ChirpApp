@@ -3,10 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// Import TokenStorage untuk mengambil token login
 import '../utils/token_storage.dart';
-
-// Import halaman ProfileTab (pastikan sudah ada file profile_tab.dart dan kelas ProfileTab)
 import 'profile_tab.dart';
 
 class SearchTab extends StatefulWidget {
@@ -21,6 +18,8 @@ class _SearchTabState extends State<SearchTab> {
   Map<String, dynamic>? userData;
   bool isLoading = false;
   String? error;
+  bool isFollowing = false;
+  bool isButtonLoading = false;
 
   Future<void> _searchUser() async {
     final username = _searchController.text.trim();
@@ -28,6 +27,7 @@ class _SearchTabState extends State<SearchTab> {
       setState(() {
         error = "Please enter a username to search";
         userData = null;
+        isFollowing = false;
       });
       return;
     }
@@ -36,10 +36,10 @@ class _SearchTabState extends State<SearchTab> {
       isLoading = true;
       error = null;
       userData = null;
+      isFollowing = false;
     });
 
     try {
-      // Ambil token login dari TokenStorage
       final token = await TokenStorage.getToken();
       if (token == null) {
         setState(() {
@@ -49,7 +49,6 @@ class _SearchTabState extends State<SearchTab> {
         return;
       }
 
-      // Panggil API pencarian user berdasarkan username
       final uri = Uri.parse(
           'http://localhost:3000/api/users/search?username=$username');
       final response = await http.get(
@@ -62,32 +61,90 @@ class _SearchTabState extends State<SearchTab> {
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
-        // Asumsi response: { "user": { "id":..., "username":..., "fullName":..., "image":... } }
         if (jsonBody['user'] != null) {
           setState(() {
             userData = jsonBody['user'];
             error = null;
+            // Assume API returns "isFollowing" info or we call separate endpoint to check
+            isFollowing = jsonBody['user']['isFollowing'] ?? false;
           });
         } else {
           setState(() {
             userData = null;
             error = 'User not found.';
+            isFollowing = false;
           });
         }
       } else {
         setState(() {
           error = 'Failed to fetch user. Status code: ${response.statusCode}';
           userData = null;
+          isFollowing = false;
         });
       }
     } catch (e) {
       setState(() {
         error = 'Error occurred: $e';
         userData = null;
+        isFollowing = false;
       });
     } finally {
       setState(() {
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    if (userData == null) return;
+
+    setState(() {
+      isButtonLoading = true;
+    });
+
+    final token = await TokenStorage.getToken();
+    if (token == null) {
+      setState(() {
+        error = 'You must be logged in to follow/unfollow users.';
+        isButtonLoading = false;
+      });
+      return;
+    }
+
+    final userId = userData!['id'];
+    try {
+      final url = Uri.parse(
+        isFollowing
+            ? 'http://localhost:3000/api/users/$userId/unfollow'
+            : 'http://localhost:3000/api/users/$userId/follow',
+      );
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        setState(() {
+          isFollowing = !isFollowing;
+          error = null;
+        });
+      } else {
+        final jsonBody = json.decode(response.body);
+        setState(() {
+          error = jsonBody['error'] ?? 'Failed to ${isFollowing ? 'unfollow' : 'follow'} user.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Error occurred: $e';
+      });
+    } finally {
+      setState(() {
+        isButtonLoading = false;
       });
     }
   }
@@ -115,11 +172,26 @@ class _SearchTabState extends State<SearchTab> {
             backgroundImage: userData!['image'] != null &&
                     userData!['image'].toString().isNotEmpty
                 ? NetworkImage(userData!['image'])
-                : AssetImage('assets/images/default_avatar.png')
-                    as ImageProvider,
+                : AssetImage('assets/images/default_avatar.png') as ImageProvider,
           ),
           title: Text(userData!['username'] ?? 'No username'),
           subtitle: Text(userData!['fullName'] ?? ''),
+          trailing: ElevatedButton(
+            onPressed: isButtonLoading ? null : _toggleFollow,
+            child: isButtonLoading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(isFollowing ? 'Unfollow' : 'Follow'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isFollowing ? Colors.red : Colors.blue,
+            ),
+          ),
         ),
       ),
     );
@@ -170,4 +242,3 @@ class _SearchTabState extends State<SearchTab> {
     );
   }
 }
-
