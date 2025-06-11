@@ -65,7 +65,7 @@ class _SearchTabState extends State<SearchTab> {
           setState(() {
             userData = jsonBody['user'];
             error = null;
-            // Assume API returns "isFollowing" info or we call separate endpoint to check
+            // Asumsi API mengirim status follow user ini
             isFollowing = jsonBody['user']['isFollowing'] ?? false;
           });
         } else {
