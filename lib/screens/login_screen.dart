@@ -82,8 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 80),
               Center(
                 child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 200,
+                  'assets/images/logo_chirp.png',
+                  width: 400,
                   height: 200,
                 ),
               ),
