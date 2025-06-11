@@ -68,7 +68,16 @@ class _HomeTabState extends State<HomeTab> {
       separatorBuilder: (context, index) => Divider(),
       itemBuilder: (context, index) {
         final post = posts[index];
-        return ChirpWidget(chirp: post);
+        return ChirpWidget(
+          chirp: post,
+          onDelete: () {
+  print('Menghapus post dengan id: ${post.id}');
+  setState(() {
+    posts.removeWhere((p) => p.id == post.id);
+  });
+},
+
+        );
       },
     );
   }
